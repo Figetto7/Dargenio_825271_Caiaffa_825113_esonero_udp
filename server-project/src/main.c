@@ -64,11 +64,11 @@ int is_valid_type(char type) {
 }
 
 float get_temperature(void) {
-    return -10.0 + (rand() / (float)RAND_MAX) * 50.0f;
+    return -10.0f + (rand() / (float)RAND_MAX) * 50.0f;
 }
 
 float get_humidity(void) {
-    return 20.0 + (rand() / (float)RAND_MAX) * 80.0f;
+    return 20.0f + (rand() / (float)RAND_MAX) * 80.0f;
 }
 
 float get_wind(void) {
@@ -76,13 +76,14 @@ float get_wind(void) {
 }
 
 float get_pressure(void) {
-    return 950.0 + (rand() / (float)RAND_MAX) * 100.0f;
+    return 950.0f + (rand() / (float)RAND_MAX) * 100.0f;
 }
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     int port = SERVER_PORT;
+
 
     if (argc == 3) {
         if (strcmp(argv[1], "-p") == 0) {
@@ -113,7 +114,6 @@ int main(int argc, char *argv[]) {
 
     int my_socket;
 
-    // UDP: SOCK_DGRAM invece di SOCK_STREAM
     my_socket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (my_socket < 0) {
@@ -135,17 +135,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // UDP: non serve listen()
     printf("In attesa di richieste client...\n");
 
     struct sockaddr_in cad;
     socklen_t client_len;
 
     while (1) {
+
         char recv_buffer[sizeof(char) + 64];
         client_len = sizeof(cad);
 
-        // UDP: recvfrom invece di accept + recv
         int bytes_rcvd = recvfrom(my_socket, recv_buffer, sizeof(recv_buffer), 0,
                                   (struct sockaddr *)&cad, &client_len);
 
@@ -153,7 +152,6 @@ int main(int argc, char *argv[]) {
             printf("Errore: recvfrom() fallita\n");
             continue;
         }
-
 
         weather_request_t request;
         int offset = 0;
@@ -213,19 +211,15 @@ int main(int argc, char *argv[]) {
             }
         }
 
-
         char send_buffer[sizeof(uint32_t) + sizeof(char) + sizeof(float)];
         offset = 0;
-
 
         uint32_t net_status = htonl(response.status);
         memcpy(send_buffer + offset, &net_status, sizeof(uint32_t));
         offset += sizeof(uint32_t);
 
-
         memcpy(send_buffer + offset, &response.type, sizeof(char));
         offset += sizeof(char);
-
 
         uint32_t temp;
         memcpy(&temp, &response.value, sizeof(float));
@@ -233,7 +227,7 @@ int main(int argc, char *argv[]) {
         memcpy(send_buffer + offset, &temp, sizeof(float));
         offset += sizeof(float);
 
-        // UDP: sendto invece di send
+
         sendto(my_socket, send_buffer, offset, 0, (struct sockaddr *)&cad, client_len);
     }
 

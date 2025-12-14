@@ -52,7 +52,6 @@ void capitalize_city(char *city) {
 }
 
 int main(int argc, char *argv[]) {
-
     char *server_input = "localhost";
     int port = SERVER_PORT;
     char *request_str = NULL;
@@ -86,6 +85,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+
     char type;
     char city[64];
     char *space_pos = strchr(request_str, ' ');
@@ -118,7 +118,6 @@ int main(int argc, char *argv[]) {
     strncpy(city, city_start, 63);
     city[63] = '\0';
 
-
     if (strlen(city) > 63) {
         printf("Errore: il nome della citta' e' troppo lungo (max 63 caratteri)\n");
         return 1;
@@ -135,7 +134,7 @@ int main(int argc, char *argv[]) {
 
     int c_socket;
 
-    // UDP: SOCK_DGRAM invece di SOCK_STREAM
+
     c_socket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (c_socket < 0) {
@@ -189,8 +188,6 @@ int main(int argc, char *argv[]) {
     sad.sin_addr = server_ip_addr;
     sad.sin_port = htons(port);
 
-    // UDP: non serve connect()
-
 
     char send_buffer[sizeof(char) + 64];
     int offset = 0;
@@ -202,7 +199,6 @@ int main(int argc, char *argv[]) {
     memcpy(send_buffer + offset, city, city_len);
     offset += city_len;
 
-    // UDP: sendto invece di send
     if (sendto(c_socket, send_buffer, offset, 0, (struct sockaddr *)&sad, sizeof(sad)) < 0) {
         printf("Errore: funzione sendto() fallita\n");
         closesocket(c_socket);
@@ -210,7 +206,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // UDP: recvfrom invece di recv
     char recv_buffer[sizeof(uint32_t) + sizeof(char) + sizeof(float)];
     struct sockaddr_in from_addr;
     socklen_t from_len = sizeof(from_addr);
@@ -224,7 +219,6 @@ int main(int argc, char *argv[]) {
         clearwinsock();
         return 1;
     }
-
 
     if (sad.sin_addr.s_addr != from_addr.sin_addr.s_addr) {
         printf("Errore: ricevuto pacchetto da sorgente sconosciuta\n");
@@ -241,27 +235,21 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-
     weather_response_t response;
     offset = 0;
-
 
     uint32_t net_status;
     memcpy(&net_status, recv_buffer + offset, sizeof(uint32_t));
     response.status = ntohl(net_status);
     offset += sizeof(uint32_t);
 
-
     memcpy(&response.type, recv_buffer + offset, sizeof(char));
     offset += sizeof(char);
-
 
     uint32_t temp;
     memcpy(&temp, recv_buffer + offset, sizeof(float));
     temp = ntohl(temp);
     memcpy(&response.value, &temp, sizeof(float));
-
-
     capitalize_city(city);
 
     printf("Ricevuto risultato dal server %s (ip %s). ", server_hostname, server_ip_str);
