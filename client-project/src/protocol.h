@@ -1,38 +1,36 @@
 /*
  * protocol.h
  *
- * Shared header file for UDP client and server
- * Contains protocol definitions, data structures, constants and function prototypes
+ * Shared protocol header file
+ * Definitions, constants and structures for client/server communication
  */
 
 #ifndef PROTOCOL_H_
 #define PROTOCOL_H_
 
-#include <stdint.h>
+// Shared application parameters
+#define SERVER_PORT 56700  // Default server port
+#define STATUS_OK 0        // Code for correct communication
+#define STATUS_CITY_NOT_FOUND 1     // Code for city not found
+#define STATUS_INVALID_REQUEST 2    // Code for invalid request
 
-/*
- * ============================================================================
- * PROTOCOL CONSTANTS
- * ============================================================================
- */
+// Message Client → Server
+typedef struct {
+    char type;        // Weather data type: 't', 'h', 'w', 'p'
+    char city[64];    // City name (null-terminated string)
+} weather_request_t;
 
-// #define ...
+// Message Server → Client
+typedef struct {
+    unsigned int status;  // Response status code
+    char type;            // Echo of request type
+    float value;          // Weather data value
+} weather_response_t;
 
-/*
- * ============================================================================
- * PROTOCOL DATA STRUCTURES
- * ============================================================================
- */
-
-// Weather request and response structures 
-
-/*
- * ============================================================================
- * FUNCTION PROTOTYPES
- * ============================================================================
- */
-
-// Add here the signatures of the functions you implement
-
+// Server data generation functions
+float get_temperature(void);    // Range: -10.0 to 40.0 °C
+float get_humidity(void);       // Range: 20.0 to 100.0 %
+float get_wind(void);           // Range: 0.0 to 100.0 km/h
+float get_pressure(void);       // Range: 950.0 to 1050.0 hPa
 
 #endif /* PROTOCOL_H_ */
